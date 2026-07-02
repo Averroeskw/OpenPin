@@ -33,8 +33,9 @@ export const COMP_MODELS: RequireOne<
     endpoint: customEndpoint(),
     name: process.env.CUSTOM_LLM_MODEL ?? "gpt-4o-mini",
     supportsTools: process.env.CUSTOM_LLM_TOOLS !== "false",
-    getKey: () =>
-      (process.env.CUSTOM_LLM_KEY ?? process.env.OPENAI_KEY) as string,
+    // Empty string (not undefined) when unset — keyless self-hosted gateways
+    // (e.g. Ollama) accept it, and it avoids sending "Bearer undefined".
+    getKey: () => process.env.CUSTOM_LLM_KEY ?? process.env.OPENAI_KEY ?? "",
   },
   "gpt-4o-mini": {
     endpoint: "https://api.openai.com/v1/chat/completions",
