@@ -49,12 +49,12 @@ export const transcodeToOgg = (
       .audioChannels(channels)
       .format("ogg")
       .on("error", reject)
-      .on("end", () => {
-        resolve(Buffer.concat(chunks));
-      })
       .pipe(outputStream, { end: true });
 
     outputStream.on("data", (chunk) => chunks.push(chunk));
+    // Resolve on the output stream's end, not ffmpeg's — ffmpeg can signal
+    // "end" while the last chunks are still buffered in the PassThrough.
+    outputStream.on("end", () => resolve(Buffer.concat(chunks)));
     outputStream.on("error", reject);
   });
 };

@@ -89,6 +89,7 @@ const speakOpenai = async (
     {
       headers: getOpenaiSpeechHeaders(),
       responseType: "arraybuffer",
+      timeout: 30000,
     }
   );
 
