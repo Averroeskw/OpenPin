@@ -22,7 +22,8 @@ enum class SystemSound(val key: String, val resId: Int) {
     QR_SCAN("qr_scan", R.raw.qr_scan),
     QR_FINISH("qr_finish", R.raw.qr_finish),
     QR_FAILED("qr_failed", R.raw.qr_failed),
-    VOLUME_CHANGE("volume_change", R.raw.volume_change);
+    VOLUME_CHANGE("volume_change", R.raw.volume_change),
+    LOW_BATTERY("low_battery", R.raw.low_battery);
 
     companion object {
         val asMap: Map<String, Int> = entries.associate { it.key to it.resId }

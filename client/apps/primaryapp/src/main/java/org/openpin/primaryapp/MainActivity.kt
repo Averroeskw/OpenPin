@@ -53,6 +53,7 @@ class MainActivity : PinActivity() {
     )
 
     private lateinit var gestureManager: GestureManager
+    private var lowBatteryAlerter: LowBatteryAlerter? = null
 
     override fun onReady() {
         super.onReady()
@@ -60,11 +61,19 @@ class MainActivity : PinActivity() {
         gestureManager = get<GestureManager>()
         gestureManager.addListeners()
 
+        lowBatteryAlerter = LowBatteryAlerter(this, get()).also { it.start() }
+
         val navigationController = NavigationController().apply {
             init { HomeView(navigationController = this) }
         }
         setGraphicsContent {
             AppContainer(navigationController = navigationController)
         }
+    }
+
+    override fun onDestroy() {
+        lowBatteryAlerter?.close()
+        lowBatteryAlerter = null
+        super.onDestroy()
     }
 }
