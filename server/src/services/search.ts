@@ -24,9 +24,25 @@ const env = (name: string) => {
   return v && v !== "XXX" ? v : undefined;
 };
 
+const REQUIRED_ENV: Record<SearchProvider, string> = {
+  brave: "BRAVE_KEY",
+  searxng: "SEARXNG_BASE_URL",
+  bing: "BING_KEY",
+};
+
 const resolveProvider = (): SearchProvider => {
   const explicit = process.env.SEARCH_PROVIDER?.toLowerCase();
-  if (explicit === "brave" || explicit === "searxng" || explicit === "bing") {
+  if (explicit) {
+    if (explicit !== "brave" && explicit !== "searxng" && explicit !== "bing") {
+      throw new Error(
+        `Unknown SEARCH_PROVIDER "${explicit}" — use brave, searxng, or bing.`
+      );
+    }
+    if (!env(REQUIRED_ENV[explicit])) {
+      throw new Error(
+        `SEARCH_PROVIDER=${explicit} requires ${REQUIRED_ENV[explicit]} to be set.`
+      );
+    }
     return explicit;
   }
   if (env("SEARXNG_BASE_URL")) return "searxng";
@@ -39,10 +55,12 @@ const resolveProvider = (): SearchProvider => {
 };
 
 const MAX_RESULTS = 8;
+const REQUEST_TIMEOUT_MS = 15000;
 
 const searchBrave = async (query: string): Promise<SearchResult[]> => {
   const client = axios.create({
     baseURL: "https://api.search.brave.com/res/v1",
+    timeout: REQUEST_TIMEOUT_MS,
     headers: {
       Accept: "application/json",
       "X-Subscription-Token": env("BRAVE_KEY") as string,
@@ -63,7 +81,7 @@ const searchBrave = async (query: string): Promise<SearchResult[]> => {
 
 const searchSearxng = async (query: string): Promise<SearchResult[]> => {
   const baseURL = (env("SEARXNG_BASE_URL") as string).replace(/\/+$/, "");
-  const client = axios.create({ baseURL });
+  const client = axios.create({ baseURL, timeout: REQUEST_TIMEOUT_MS });
 
   const res = await client.get("/search", {
     params: { q: query, format: "json" },
@@ -82,6 +100,7 @@ const searchSearxng = async (query: string): Promise<SearchResult[]> => {
 const searchBing = async (query: string): Promise<SearchResult[]> => {
   const client = axios.create({
     baseURL: "https://api.bing.microsoft.com/v7.0",
+    timeout: REQUEST_TIMEOUT_MS,
     headers: { "Ocp-Apim-Subscription-Key": env("BING_KEY") as string },
   });
 

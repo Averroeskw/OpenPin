@@ -105,7 +105,7 @@ const getOpenWeather = async (
     currentHumidity: current.humidity,
     currentUvi: current.uvi,
     currentWindSpeed: current.wind_speed,
-    currentConditions: current.weather[0]?.main,
+    currentConditions: current.weather[0]?.main ?? "Clear",
   };
 };
 
