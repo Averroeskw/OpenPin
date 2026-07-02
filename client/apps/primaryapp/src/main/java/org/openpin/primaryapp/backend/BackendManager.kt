@@ -225,13 +225,17 @@ class BackendManager(
         val baseUrl = configurationManager.getString(ConfigKey.BACKEND_BASE_URL)!!
         val deviceId = configurationManager.getString(ConfigKey.DEVICE_ID)!!
 
+        // Quantize to the same whole percent shown on the laser display, so the
+        // spoken value (formatted server-side) can never disagree with the UI.
+        val batteryStatus = batteryManager.status
+
         val requestMetadata = RequestMetadata(
             audioSize = audioFile.length(),
             audioFormat = "ogg",
             imageSize = imageFile?.length() ?: 0,
             deviceId = deviceId,
             audioBitrate = "64k",
-            battery = batteryManager.status.percentage,
+            battery = batteryStatus.percent / 100f,
             latitude = locationManager.latestLocation?.location?.lat,
             longitude = locationManager.latestLocation?.location?.lng
         )

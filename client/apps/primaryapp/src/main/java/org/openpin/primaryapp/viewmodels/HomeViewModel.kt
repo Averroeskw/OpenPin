@@ -42,7 +42,7 @@ class HomeViewModel(
             _isPaired.value = paired
 
             val batteryStatus: BatteryStatus = batteryManager.status
-            _batteryPercentage.value = (batteryStatus.percentage * 100).toInt()
+            _batteryPercentage.value = batteryStatus.percent
 
             if (!paired) return@launch
 
