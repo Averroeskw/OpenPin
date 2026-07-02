@@ -23,6 +23,42 @@ export const changeVolume = (inputBuffer: Buffer, volume: number): Promise<Buffe
   });
 };
 
+export interface TranscodeOptions {
+  /** Output sample rate in Hz (default 16 kHz, like Azure TTS). */
+  sampleRate?: number;
+  /** Output channel count (default mono). */
+  channels?: number;
+}
+
+/*
+ * Transcode any ffmpeg-readable audio buffer to an Ogg buffer with the given
+ * sample rate / channel count. Used to normalize third-party TTS output to
+ * the profile the device pipeline expects (Ogg, 16 kHz, mono).
+ */
+export const transcodeToOgg = (
+  inputBuffer: Buffer,
+  { sampleRate = 16000, channels = 1 }: TranscodeOptions = {}
+): Promise<Buffer> => {
+  return new Promise((resolve, reject) => {
+    const inputStream = streamifier.createReadStream(inputBuffer);
+    const outputStream = new PassThrough();
+    const chunks: Buffer[] = [];
+
+    ffmpeg(inputStream)
+      .audioFrequency(sampleRate)
+      .audioChannels(channels)
+      .format("ogg")
+      .on("error", reject)
+      .on("end", () => {
+        resolve(Buffer.concat(chunks));
+      })
+      .pipe(outputStream, { end: true });
+
+    outputStream.on("data", (chunk) => chunks.push(chunk));
+    outputStream.on("error", reject);
+  });
+};
+
 export const getPeakVolume = (inputBuffer: Buffer): Promise<number> => {
   return new Promise((resolve, reject) => {
     const inputStream = streamifier.createReadStream(inputBuffer);
