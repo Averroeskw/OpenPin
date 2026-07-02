@@ -29,7 +29,14 @@ class Handler extends AbstractVoiceHandler {
       audioData = await addBackgroundAudio(audioData, SEXY_BG_AUDIO_FILE, SEXY_BG_AUDIO_CONFIG);
     }
 
-    await this.sendResponse(audioData);
+    // Include the spoken text so clients can render it (e.g. on the laser
+    // display) while the audio plays. 512-byte header cap: truncate long
+    // replies rather than erroring the whole response.
+    let text = speech;
+    while (Buffer.byteLength(JSON.stringify({ text }), "utf-8") + 1 > 512) {
+      text = text.slice(0, -8);
+    }
+    await this.sendResponse(audioData, { text });
   }
 
   public async run() {

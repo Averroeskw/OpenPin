@@ -197,7 +197,7 @@ export class AbstractVoiceHandler {
     }
 
     const paddedMetadata = new Uint8Array(512);
-    paddedMetadata.set(paddedMetadata);
+    paddedMetadata.set(metadataBuffer);
 
     const body = Buffer.concat([paddedMetadata, audioData]);
     this.res.status(200).send(body);
