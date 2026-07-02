@@ -6,6 +6,12 @@ import { SEXY_PROMPT } from "./sexyMode";
 export const COMP_MAX_CALLS = 5;
 export const COMP_CALLS_EXCEEDED_MSG = `Failed to get a response from Davis in ${COMP_MAX_CALLS} calls.`;
 
+// Spoken to the user when the custom endpoint is unreachable, times out, or
+// errors — the device is screenless, so it must hear something speakable
+// instead of a hard error.
+export const CUSTOM_LLM_UNREACHABLE_MSG =
+  "My brain is unreachable right now — try again in a moment.";
+
 type RequireOne<T, K extends keyof T> = Partial<T> & Required<Pick<T, K>>;
 
 // Resolve the full chat-completions URL for the user-supplied custom endpoint.

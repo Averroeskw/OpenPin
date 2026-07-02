@@ -10,7 +10,7 @@ import { functions, FunctionHandlerError } from "./functions";
 import { COMP_MAX_CALLS, COMP_MODELS } from "../config/davis";
 import { DeviceContext } from "src/endpoints/device/voice/common";
 import { DeviceNote, getDeviceNotes } from "src/services/database/device/notes";
-import { COMP_CALLS_EXCEEDED_MSG } from "src/config/davis";
+import { COMP_CALLS_EXCEEDED_MSG, CUSTOM_LLM_UNREACHABLE_MSG } from "src/config/davis";
 import { getNoteSlug } from "./functions/handlers/upsertNote";
 import { WithId } from "src/services/database/device/content";
 import { addHours } from "date-fns/addHours";
@@ -217,11 +217,23 @@ class DavisEngine {
   }
 
   private async doCompletionIteration(): Promise<string | undefined> {
-    const assistantMsg = await doChatCompletion(
-      this.getModel(),
-      this.completionMsgs,
-      functions.map((f) => f.definition)
-    );
+    const model = this.getModel();
+
+    let assistantMsg;
+    try {
+      assistantMsg = await doChatCompletion(
+        model,
+        this.completionMsgs,
+        functions.map((f) => f.definition)
+      );
+    } catch (error) {
+      // Only the user-supplied custom endpoint gets a spoken fallback;
+      // other providers keep their existing error behavior
+      if (model !== COMP_MODELS.custom) throw error;
+
+      console.warn("Custom LLM endpoint failed", error);
+      return CUSTOM_LLM_UNREACHABLE_MSG;
+    }
 
     this.completionMsgs.push(assistantMsg);
     const toolCalls = assistantMsg.tool_calls || [];
