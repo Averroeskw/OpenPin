@@ -20,8 +20,10 @@ import org.openpin.appframework.sensors.microphone.RecordSession
 import org.openpin.appframework.media.soundplayer.withLoadingSounds
 import org.openpin.appframework.sensors.camera.CaptureResult
 import org.openpin.appframework.sensors.camera.CaptureSession
+import org.openpin.appframework.ui.controllers.NavigationController
 import org.openpin.primaryapp.backend.BackendManager
 import org.openpin.primaryapp.gestureinterpreter.InterpreterMode
+import org.openpin.primaryapp.views.AnswerCardView
 import java.io.File
 
 class GestureManager(
@@ -44,6 +46,8 @@ class GestureManager(
 
     private var speechCapture: RecordSession? = null
     private var videoCaptureSession: CaptureSession<Uri>? = null
+
+    private var navigationController: NavigationController? = null
 
     private var voiceInputStart: Long = 0
 
@@ -112,6 +116,14 @@ class GestureManager(
 
     fun addListeners() {
         gestureInterpreter.subscribeGestures()
+    }
+
+    /**
+     * Attaches the navigation controller used to project the answer card
+     * while a reply is being spoken.
+     */
+    fun attachNavigationController(navigationController: NavigationController) {
+        this.navigationController = navigationController
     }
 
     fun enableSettingsToggle(onToggle: (Boolean) -> Unit) {
@@ -267,12 +279,25 @@ class GestureManager(
                     backendManager.sendVoiceRequest(endpoint, capture.result, imgFile)
                 }
 
-                res?.let {
+                res?.let { response ->
                     gestureInterpreter.setMode(InterpreterMode.CANCELABLE)
                     state = State.VOICE_RESPONDING
 
-                    speechPlayer.play(it)
-                    speechPlayer.awaitPlaybackCompletion()
+                    // Project the reply text while it is being spoken, if the
+                    // server included it in the response metadata.
+                    val nav = navigationController
+                    val answerText = response.text?.trim()
+                    val showCard = nav != null && !answerText.isNullOrEmpty()
+                    if (showCard) nav?.push { AnswerCardView(answerText!!) }
+
+                    try {
+                        speechPlayer.play(response.audio)
+                        speechPlayer.awaitPlaybackCompletion()
+                    } finally {
+                        // Dismiss when playback completes naturally or is
+                        // cancelled by the gesture handled in handleCancel()
+                        if (showCard) nav?.pop()
+                    }
                 }
             } catch (err: Exception) {
                 Log.e("Assistant", "Failed to complete voice request: ${err.message}")

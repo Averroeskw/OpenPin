@@ -63,6 +63,7 @@ class MainActivity : PinActivity() {
         val navigationController = NavigationController().apply {
             init { HomeView(navigationController = this) }
         }
+        gestureManager.attachNavigationController(navigationController)
         setGraphicsContent {
             AppContainer(navigationController = navigationController)
         }

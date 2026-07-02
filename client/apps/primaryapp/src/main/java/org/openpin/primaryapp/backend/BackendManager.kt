@@ -33,7 +33,19 @@ data class ResponseMetadata(
     val bt: Boolean,
     val gnss: Boolean,
     val spkVol: Float,
-    val lLevel: Float
+    val lLevel: Float,
+    /**
+     * Plain text of the assistant reply, if the server includes it in the
+     * response metadata. Optional and backwards-compatible: older servers
+     * that omit it simply yield null.
+     */
+    val text: String? = null
+)
+
+/** A voice-endpoint response: the TTS audio plus optional reply text. */
+class VoiceResponse(
+    val audio: ByteArray,
+    val text: String?
 )
 
 data class PairDetails(
@@ -220,7 +232,7 @@ class BackendManager(
         }
     }
 
-    suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): ByteArray? {
+    suspend fun sendVoiceRequest(endpoint: String, audioFile: File, imageFile: File?): VoiceResponse? {
         // Todo: clean up logic into multiple fns
         val baseUrl = configurationManager.getString(ConfigKey.BACKEND_BASE_URL)!!
         val deviceId = configurationManager.getString(ConfigKey.DEVICE_ID)!!
@@ -287,7 +299,7 @@ class BackendManager(
                 input.readBytes()
             }
 
-            return audioBytes
+            return VoiceResponse(audioBytes, responseMetadata?.text)
         } finally {
             requestFile?.delete()
             responseFile?.delete()
