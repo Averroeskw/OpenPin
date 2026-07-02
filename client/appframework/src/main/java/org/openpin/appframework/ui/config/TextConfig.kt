@@ -7,6 +7,8 @@ import androidx.compose.ui.unit.sp
 
 data class TextConfig(
     val fontFamily: FontFamily = PoppinsFontFamily,
+    /** Font family used when the text contains Arabic-script characters. */
+    val arabicFontFamily: FontFamily = NotoSansArabicFontFamily,
     val fontSize: TextUnit = 70.sp,
     val fontWeight: FontWeight = FontWeight.Black
 )
