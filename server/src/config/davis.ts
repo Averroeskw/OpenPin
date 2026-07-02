@@ -8,10 +8,28 @@ export const COMP_CALLS_EXCEEDED_MSG = `Failed to get a response from Davis in $
 
 type RequireOne<T, K extends keyof T> = Partial<T> & Required<Pick<T, K>>;
 
+// Resolve the full chat-completions URL for the user-supplied custom endpoint.
+// Accepts either CUSTOM_LLM_ENDPOINT (full URL) or CUSTOM_LLM_BASE (…/v1).
+const customEndpoint = (): string => {
+  if (process.env.CUSTOM_LLM_ENDPOINT) return process.env.CUSTOM_LLM_ENDPOINT;
+  const base = process.env.CUSTOM_LLM_BASE;
+  if (base) return `${base.replace(/\/+$/, "")}/chat/completions`;
+  return "https://api.openai.com/v1/chat/completions";
+};
+
 export const COMP_MODELS: RequireOne<
   Record<LanguageModelKey, AuthenticatedCompletionModel>,
   "gpt-4o-mini"
 > = {
+  // Point at any OpenAI-compatible endpoint (LiteLLM, Ollama, OpenRouter, a
+  // self-hosted gateway, …) via env. Works for both text and vision.
+  custom: {
+    endpoint: customEndpoint(),
+    name: process.env.CUSTOM_LLM_MODEL ?? "gpt-4o-mini",
+    supportsTools: process.env.CUSTOM_LLM_TOOLS !== "false",
+    getKey: () =>
+      (process.env.CUSTOM_LLM_KEY ?? process.env.OPENAI_KEY) as string,
+  },
   "gpt-4o-mini": {
     endpoint: "https://api.openai.com/v1/chat/completions",
     name: "gpt-4o-mini",

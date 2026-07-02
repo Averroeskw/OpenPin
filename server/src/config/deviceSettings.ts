@@ -11,6 +11,12 @@ export interface ModelInterfaces {
 export const LANGUAGE_MODELS = [
   { value: "gpt-4o", label: "GPT-4o", supportVision: true },
   { value: "gpt-4o-mini", label: "GPT-4o Mini", supportText: true },
+  {
+    value: "custom",
+    label: "Custom (OpenAI-compatible)",
+    supportText: true,
+    supportVision: true,
+  },
   { value: "grok-2-sexy", label: "Grok 2 (Sexy Mode)", supportText: true },
   { value: "grok-3", label: "Grok 3" },
   { value: "llama-3-2-11b", label: "Llama 3.2 11B" },
