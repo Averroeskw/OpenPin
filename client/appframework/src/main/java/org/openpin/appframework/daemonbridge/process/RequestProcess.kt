@@ -95,6 +95,12 @@ class RequestProcess(
                     cmd.add(flag)
                     cmd.add(payload.toCurlArg())
                 }
+            } else if (method.uppercase() !in listOf("GET", "HEAD")) {
+                // curl omits Content-Length when no payload is given, and strict
+                // frontends (e.g. Google Cloud Run) reject bodyless POSTs without
+                // it with "411 Length Required"
+                cmd.add("-H")
+                cmd.add("\"Content-Length: 0\"")
             }
 
             // Query parameters
